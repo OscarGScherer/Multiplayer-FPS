@@ -44,7 +44,6 @@ public class PlayerInput : NetworkBehaviour
 		base.OnNetworkSpawn();
 		
 		GetComponent<PlayerController>().enabled = false;
-		transform.position += new Vector3(Random.Range(-2,2), 3, Random.Range(-2,2));
 		GetComponent<PlayerController>().enabled = true;
 		if(!IsOwner)
 		{
@@ -56,6 +55,7 @@ public class PlayerInput : NetworkBehaviour
 	{
 		if(MatchInfo.playerCount.Value == 1) SetLayerAllChildren(transform, 7);
 		if(IsOwner) IncrementPlayerCount_ServerRPC();
+		transform.position = Vector3.up*3;
 	}
 
 	[ServerRpc] public void IncrementPlayerCount_ServerRPC(){ MatchInfo.playerCount.Value++; }
