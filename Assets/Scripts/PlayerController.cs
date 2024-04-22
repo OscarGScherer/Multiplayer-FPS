@@ -10,7 +10,6 @@ public class PlayerController : NetworkBehaviour
 	
 	// Network variables
 	public NetworkVariable<Vector3> facingDirection = new NetworkVariable<Vector3>(Vector3.one, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
-	public NetworkVariable<bool> isAlive = new NetworkVariable<bool>(false, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 	public NetworkVariable<float> health = new NetworkVariable<float>(MAX_HEALTH, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 	public NetworkVariable<int> team = new NetworkVariable<int>(0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
 	
@@ -91,7 +90,7 @@ public class PlayerController : NetworkBehaviour
 	public void AddHorizontalForce(Vector2 direction, float magnitude)
 	{
 		if(rb.velocity.magnitude > MAX_SPEED) return;
-		Vector3 force = (transform.forward * direction.y + transform.right * direction.x) * magnitude;
+		Vector3 force = (transform.forward * direction.y + transform.right * direction.x) * magnitude * Time.deltaTime;
 		rb.AddForce(force);
 	}
 	
@@ -119,15 +118,7 @@ public class PlayerController : NetworkBehaviour
 	{
 		yield return new WaitForSeconds(5f);
 		health.Value = MAX_HEALTH;
-		Respawn();
-	}
-	
-	private void Respawn()
-	{
-		transform.position = spawnPoint.position;
-		transform.rotation = spawnPoint.rotation;
-		rb.freezeRotation = true;
-		canMove = true;
+		Respawn_ClientRPC(spawnPoint.position, spawnPoint.rotation);
 	}
 	
 	public void Die()
@@ -139,6 +130,15 @@ public class PlayerController : NetworkBehaviour
 	// -----------------------------------
 	// RPCs the server calls
 	// -----------------------------------
+	
+	[ClientRpc] 
+	void Respawn_ClientRPC(Vector3 position, Quaternion rotation)
+	{
+		transform.position = position;
+		transform.rotation = rotation;
+		rb.freezeRotation = true;
+		canMove = true;
+	}
 	
 	[ClientRpc]
 	private void Die_ClientRPC()

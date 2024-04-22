@@ -53,7 +53,7 @@ public class PlayerInput : NetworkBehaviour
 		{
 			//Movement stuff, client side
 			//if(Input.GetKeyDown(KeyCode.Escape)) playerController.Teleport(Vector3.zero);
-			playerController.AddHorizontalForce(clientInput.wasdVector, 5f);
+			playerController.AddHorizontalForce(clientInput.wasdVector, 500f);
 			playerController.LookAt(clientInput.mouseVector);
 			if(clientInput.spacebar) playerController.Jump(7f);
 			
