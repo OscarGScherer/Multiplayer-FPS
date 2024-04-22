@@ -75,9 +75,9 @@ public class NetworkManagerHud : MonoBehaviour
 		GUILayout.EndHorizontal();
 
 		if (GUILayout.Button("Host (Server + Client)"))
-		{
+		{ 
 			m_NetworkManager.StartHost();
-			m_NetworkManager.SceneManager.LoadScene("SampleScene", LoadSceneMode.Single); 
+			m_NetworkManager.SceneManager.LoadScene("SampleScene", LoadSceneMode.Single);
 		}
 
 		GUILayout.BeginHorizontal();

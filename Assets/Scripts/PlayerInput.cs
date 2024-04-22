@@ -7,6 +7,7 @@ using UnityEngine;
 
 public class PlayerInput : NetworkBehaviour
 {
+	
 	public struct InputInfo
 	{
 		public Vector2 wasdVector, mouseVector;
@@ -30,43 +31,10 @@ public class PlayerInput : NetworkBehaviour
 		//Cursor.visible = false;
 	}
 	
-	void SetLayerAllChildren(Transform root, int layer)
-	{
-		var children = root.GetComponentsInChildren<Transform>(includeInactive: true);
-		foreach (var child in children)
-		{
-			child.gameObject.layer = layer;
-		}
-	}
-	
 	public override void OnNetworkSpawn()
-	{
-		base.OnNetworkSpawn();
-		
-		GetComponent<PlayerController>().enabled = false;
-		GetComponent<PlayerController>().enabled = true;
-		if(!IsOwner)
-		{
-			playerController.DisableCamera();
-		}
+	{	
+		if(IsOwner) playerController.EnableCamera();
 	}
-	
-	public void Start()
-	{
-		if(MatchInfo.playerCount.Value == 1) SetLayerAllChildren(transform, 7);
-		if(IsOwner) IncrementPlayerCount_ServerRPC();
-		transform.position = Vector3.up*3;
-	}
-
-	[ServerRpc] public void IncrementPlayerCount_ServerRPC(){ MatchInfo.playerCount.Value++; }
-	[ServerRpc] public void SetHorizontalVelocity_ServerRPC(Vector2 velocity) { playerController.SetHorizontalVelocity(velocity); }
-	
-	[ServerRpc] public void FireGun_ServerRPC() 
-	{ 
-		playerController.FireGun();
-	}
-	
-	[ServerRpc] public void LookAt_ServerRPC(Vector2 mouseRotation) { playerController.LookAt(mouseRotation); }
 
 	void Update()
 	{
@@ -83,10 +51,14 @@ public class PlayerInput : NetworkBehaviour
 		
 		if(playerController.canMove)
 		{
-			playerController.SetHorizontalVelocity(clientInput.wasdVector);
+			//Movement stuff, client side
+			//if(Input.GetKeyDown(KeyCode.Escape)) playerController.Teleport(Vector3.zero);
+			playerController.AddHorizontalForce(clientInput.wasdVector, 5f);
 			playerController.LookAt(clientInput.mouseVector);
-			if(clientInput.spacebar) playerController.Jump(5f);
-			if(clientInput.leftClick) FireGun_ServerRPC();
+			if(clientInput.spacebar) playerController.Jump(7f);
+			
+			//Shooting, calling RPCs
+			if(clientInput.leftClick) playerController.FireGun_ServerRPC();
 		}
 		//SetHorizontalVelocity_ServerRPC(clientInput.wasdVector);
 		//LookAt_ServerRPC(clientInput.mouseVector);

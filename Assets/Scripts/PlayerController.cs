@@ -5,67 +5,49 @@ using Unity.Netcode;
 
 public class PlayerController : NetworkBehaviour
 {
+	public const float MAX_HEALTH = 200;
+	public const float MAX_SPEED = 10;
+	
+	// Network variables
 	public NetworkVariable<Vector3> facingDirection = new NetworkVariable<Vector3>(Vector3.one, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
 	public NetworkVariable<bool> isAlive = new NetworkVariable<bool>(false, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+	public NetworkVariable<float> health = new NetworkVariable<float>(MAX_HEALTH, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+	public NetworkVariable<int> team = new NetworkVariable<int>(0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
 	
+	// Othe references
+	public Transform spawnPoint;
 	public bool canMove = true;
-	public float movementSpeed = 3f, lookSensitivity = 1f;
+	public float lookSensitivity = 1f;
 	private Rigidbody rb;
 	private Transform lookTransform;
 	private Gun equippedGun;
 	private Transform footCheck;
 	private bool canJump = true;
 
-	public override void OnNetworkSpawn()
-	{
-		base.OnNetworkSpawn();
-		isAlive.OnValueChanged += OnIsAliveChanged;
-	}
-	
-	private void OnIsAliveChanged(bool wasAlive, bool isAlive)
-	{
-		//if(wasAlive && !isAlive)
-	}
-
-	[ClientRpc]
-	public void Hit_ClientRPC(Vector3 direction)
-	{
-		Debug.Log("Got hit");
-	}
-	
-	[ServerRpc]
-	public void Die_ServerRPC()
-	{
-		
-	}
-	
 	void Awake()
 	{
 		rb = GetComponent<Rigidbody>();
+		if(!IsOwner) rb.isKinematic = true;
 		lookTransform = transform.GetChild(0).GetChild(0).GetChild(0);
 		equippedGun = GetComponentInChildren<Gun>();
 		footCheck = transform.GetChild(2);
-	
 	}
-	
-	public void DisableCamera()
+
+	// -----------------------------------
+	// Only runs client side
+	// -----------------------------------
+	public void EnableCamera()
 	{
-		lookTransform.GetComponent<Camera>().enabled = false;
-		lookTransform.GetComponent<AudioListener>().enabled = false;
+		lookTransform.GetComponent<Camera>().enabled = true;
+		lookTransform.GetComponent<AudioListener>().enabled = true;
 	}
 	
-	public void FireGun() { equippedGun.Fire(lookTransform.position, facingDirection.Value); }
-	
-	public void SetHorizontalVelocity(Vector2 velocity)
+	public void Teleport(Vector3 to)
 	{
-		Vector3 horizontalVelocity = (transform.forward * velocity.y + transform.right * velocity.x) * movementSpeed;
-		rb.velocity = new Vector3(horizontalVelocity.x, rb.velocity.y, horizontalVelocity.z);
+		rb.isKinematic = true;
+		transform.position = to;
+		rb.isKinematic = false;
 	}
-	
-	// void OnDrawGizmos()
-	// {
-	// 	Gizmos.DrawSphere(footCheck.position, 0.3f);
-	// }
 	
 	public bool IsTouchingGround()
 	{
@@ -104,8 +86,71 @@ public class PlayerController : NetworkBehaviour
 		facingDirection.Value = lookTransform.forward;
 		
 		equippedGun.transform.localEulerAngles = new Vector3(xRot, 0, 0);
-		
 	}
 	
+	public void AddHorizontalForce(Vector2 direction, float magnitude)
+	{
+		if(rb.velocity.magnitude > MAX_SPEED) return;
+		Vector3 force = (transform.forward * direction.y + transform.right * direction.x) * magnitude;
+		rb.AddForce(force);
+	}
+	
+	// -----------------------------------
+	// RPCs the client calls
+	// -----------------------------------
+	
+	[ServerRpc]
+	public void FireGun_ServerRPC() { equippedGun.Fire(lookTransform.position, facingDirection.Value); }
+	
+	// -----------------------------------
+	// Only runs server side
+	// -----------------------------------
+	
+	public void Damage(Vector3 direction, float damage, float force)
+	{
+		if(health.Value <= 0) return;
+		health.Value -= damage;
+		if(health.Value <= 0) Die();
+		Damage_ClientRPC(direction, force);
+		health.Value = health.Value < 0 ? 0 : health.Value > MAX_HEALTH ? MAX_HEALTH : health.Value;
+	}
+	
+	private IEnumerator RespawnCoroutine()
+	{
+		yield return new WaitForSeconds(5f);
+		health.Value = MAX_HEALTH;
+		Respawn();
+	}
+	
+	private void Respawn()
+	{
+		transform.position = spawnPoint.position;
+		transform.rotation = spawnPoint.rotation;
+		rb.freezeRotation = true;
+		canMove = true;
+	}
+	
+	public void Die()
+	{
+		Die_ClientRPC();
+		StartCoroutine(RespawnCoroutine());
+	}
+	
+	// -----------------------------------
+	// RPCs the server calls
+	// -----------------------------------
+	
+	[ClientRpc]
+	private void Die_ClientRPC()
+	{
+		rb.freezeRotation = false;
+		canMove = false;
+	}
+	
+	[ClientRpc]
+	private void Damage_ClientRPC(Vector3 direction, float force)
+	{
+		rb.AddForce(direction * force, ForceMode.Impulse);
+	}
 	
 }

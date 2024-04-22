@@ -10,7 +10,7 @@ public class NetworkConnection : MonoBehaviour
 	public void StartClient() { GetComponent<NetworkManager>().StartClient(); }
 	public void StartHost() 
 	{ 
+		GetComponent<NetworkManager>().SceneManager.LoadScene("SampleScene", LoadSceneMode.Single);
 		GetComponent<NetworkManager>().StartHost();
-		GetComponent<NetworkManager>().SceneManager.LoadScene("SampleScene", LoadSceneMode.Single); 
 	}
 }

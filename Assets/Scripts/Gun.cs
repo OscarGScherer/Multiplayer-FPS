@@ -14,12 +14,24 @@ public class Gun : NetworkBehaviour
 	private Coroutine gunCoroutine;
 	private LineRenderer barrelLR;
 	
-	[ClientRpc]
-	void MuzzleFlash_ClientRPC(Vector3 hitPos)
+	// -----------------------------------
+	// Only runs client side
+	// -----------------------------------
+	
+	private IEnumerator MuzzleFlashCoroutine(Vector3 hitPos)
 	{
-		StopCoroutine(gunCoroutine);
-		gunCoroutine = StartCoroutine(MuzzleFlashCoroutine(hitPos));
+		barrelLR.enabled = true;
+		barrelLR.SetPosition(0, barrel.transform.position);
+		barrelLR.SetPosition(1, hitPos);
+		StartCoroutine(CycleNextBulletCoroutine());
+		yield return new WaitForSeconds(30/rpm);
+		barrelLR.enabled = false;
+		yield return new WaitForSeconds(30/rpm);
 	}
+	
+	// -----------------------------------
+	// Only runs server side
+	// -----------------------------------
 	
 	public void Fire(Vector3 shotOrigin, Vector3 direction)
 	{
@@ -29,9 +41,8 @@ public class Gun : NetworkBehaviour
 		Vector3 hitPos = hit.collider != null ? hit.point : shotOrigin + direction * 10f;
 		if(hit.collider != null)
 		{
-			Debug.Log(hit.collider.name);
-			if(hit.collider.GetComponent<PlayerController>() != null)
-				hit.collider.GetComponent<PlayerController>().Hit_ClientRPC(direction);
+			PlayerBody bodyHit = hit.collider.GetComponent<PlayerBody>();
+			if(bodyHit != null) bodyHit.player.Damage(direction, 50f, 2f);
 		}
 			
 		MuzzleFlash_ClientRPC(hitPos);
@@ -46,21 +57,22 @@ public class Gun : NetworkBehaviour
 		
 	}
 	
-	private IEnumerator MuzzleFlashCoroutine(Vector3 hitPos)
-	{
-		barrelLR.enabled = true;
-		barrelLR.SetPosition(0, barrel.transform.position);
-		barrelLR.SetPosition(1, hitPos);
-		StartCoroutine(CycleNextBulletCoroutine());
-		yield return new WaitForSeconds(30/rpm);
-		barrelLR.enabled = false;
-		yield return new WaitForSeconds(30/rpm);
-	}
-	
 	private IEnumerator CycleNextBulletCoroutine()
 	{
 		isNextBulletReady = false;
 		yield return new WaitForSeconds(60/rpm);
 		isNextBulletReady = true;
 	}
+	
+	// -----------------------------------
+	// RPCs the server calls
+	// -----------------------------------
+	
+	[ClientRpc]
+	void MuzzleFlash_ClientRPC(Vector3 hitPos)
+	{
+		StopCoroutine(gunCoroutine);
+		gunCoroutine = StartCoroutine(MuzzleFlashCoroutine(hitPos));
+	}
+	
 }
