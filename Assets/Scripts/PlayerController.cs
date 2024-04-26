@@ -5,24 +5,26 @@ using Unity.Netcode;
 
 public class PlayerController : NetworkBehaviour
 {
-	public const float MAX_HEALTH = 200;
-	public const float MAX_SPEED = 10;
-	
 	// Network variables
 	public NetworkVariable<Vector3> facingDirection = new NetworkVariable<Vector3>(Vector3.one, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
-	public NetworkVariable<float> health = new NetworkVariable<float>(MAX_HEALTH, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+	public NetworkVariable<float> health = new NetworkVariable<float>(200, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 	public NetworkVariable<int> team = new NetworkVariable<int>(0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 	
-	// Othe references
-	public Transform spawnPoint;
-	public bool canMove = true;
+	// Other references
+	
+	// Player stats
+	public float maxHealth = 200;
+	public float maxMovementSpeed = 7, movementForce = 5;
+	public float groundDrag = 7, airSpeedMult = 0.4f;
+	public float jumpForce = 15;
+	
 	public float lookSensitivity = 1f;
+	[HideInInspector] public Transform spawnPoint;
+	[HideInInspector] public bool canMove = true;
 	private Rigidbody rb;
 	private Transform lookTransform;
 	private Gun equippedGun;
-	private Transform footCheck;
 	private bool canJump = true;
-	
 	private Coroutine respawnCoroutine;
 
 	void Awake()
@@ -31,12 +33,21 @@ public class PlayerController : NetworkBehaviour
 		if(!IsOwner) rb.isKinematic = true;
 		lookTransform = transform.GetChild(0).GetChild(0).GetChild(0);
 		equippedGun = GetComponentInChildren<Gun>();
-		footCheck = transform.GetChild(2);
 	}
 
 	// -----------------------------------
 	// Only runs client side
 	// -----------------------------------
+	
+	public void Update()
+	{
+		if(!IsOwner) return;
+		
+		if(IsTouchingGround()) rb.drag = groundDrag;
+		else rb.drag = 0;
+		
+	}
+	
 	public void EnableCamera()
 	{
 		lookTransform.GetComponent<Camera>().enabled = true;
@@ -52,7 +63,7 @@ public class PlayerController : NetworkBehaviour
 	
 	public bool IsTouchingGround()
 	{
-		return Physics.OverlapSphere(footCheck.position, 0.3f, ~(1 << gameObject.layer)).Length > 0;
+		return Physics.Raycast(transform.position + Vector3.up * 0.1f, Vector2.down, 0.4f, ~( (1 << gameObject.layer) + (1 << 9)));
 	}
 	
 	public void Jump(float magnitude)
@@ -89,11 +100,19 @@ public class PlayerController : NetworkBehaviour
 		equippedGun.transform.localEulerAngles = new Vector3(xRot, 0, 0);
 	}
 	
-	public void AddHorizontalForce(Vector2 direction, float magnitude)
+	public void SpeedCheck()
 	{
-		if(rb.velocity.magnitude > MAX_SPEED) return;
-		Vector3 force = (transform.forward * direction.y + transform.right * direction.x) * magnitude * Time.deltaTime;
-		rb.AddForce(force);
+		Vector3 horizontalSpeed = new Vector3(rb.velocity.x, 0, rb.velocity.z);
+		if(horizontalSpeed.magnitude > maxMovementSpeed)
+			rb.velocity = horizontalSpeed.normalized * maxMovementSpeed + Vector3.up * rb.velocity.y;	
+	}
+	
+	public void Move(Vector2 direction)
+	{
+		Vector3 force = (transform.forward * direction.y + transform.right * direction.x) * movementForce * Time.deltaTime;
+		if(!IsTouchingGround()) force*=airSpeedMult;
+		rb.AddForce(force, ForceMode.Force);
+		SpeedCheck();
 	}
 	
 	// -----------------------------------
@@ -113,13 +132,13 @@ public class PlayerController : NetworkBehaviour
 		health.Value -= damage;
 		if(health.Value <= 0) Die();
 		Damage_ClientRPC(direction, force);
-		health.Value = health.Value < 0 ? 0 : health.Value > MAX_HEALTH ? MAX_HEALTH : health.Value;
+		health.Value = health.Value < 0 ? 0 : health.Value > maxHealth ? maxHealth : health.Value;
 	}
 	
 	private IEnumerator RespawnCoroutine()
 	{
 		yield return new WaitForSeconds(5f);
-		health.Value = MAX_HEALTH;
+		health.Value = maxHealth;
 		Respawn_ClientRPC(spawnPoint.position, spawnPoint.rotation);
 		respawnCoroutine = null;
 	}
