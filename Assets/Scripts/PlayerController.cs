@@ -11,7 +11,7 @@ public class PlayerController : NetworkBehaviour
 	// Network variables
 	public NetworkVariable<Vector3> facingDirection = new NetworkVariable<Vector3>(Vector3.one, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
 	public NetworkVariable<float> health = new NetworkVariable<float>(MAX_HEALTH, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
-	public NetworkVariable<int> team = new NetworkVariable<int>(0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
+	public NetworkVariable<int> team = new NetworkVariable<int>(0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 	
 	// Othe references
 	public Transform spawnPoint;
@@ -134,7 +134,7 @@ public class PlayerController : NetworkBehaviour
 	[ClientRpc] 
 	void Respawn_ClientRPC(Vector3 position, Quaternion rotation)
 	{
-		transform.position = position;
+		Teleport(position);
 		transform.rotation = rotation;
 		rb.freezeRotation = true;
 		canMove = true;

@@ -24,6 +24,7 @@ public class Player : NetworkBehaviour
 		SetLayerAllChildren(go.transform, teamLayer);
 		go.GetComponent<NetworkObject>().SpawnAsPlayerObject(OwnerClientId);
 		go.GetComponent<PlayerController>().spawnPoint = spawn;
+		go.GetComponent<PlayerController>().team.Value = teamLayer - 5;
 	}
 	
 	void SetLayerAllChildren(Transform root, int layer)

@@ -10,7 +10,7 @@ using UnityEngine.SceneManagement;
 public class NetworkManagerHud : MonoBehaviour
 {
 	NetworkManager m_NetworkManager;
-
+	
 	UnityTransport m_Transport;
 
 	GUIStyle m_LabelTextStyle;

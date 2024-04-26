@@ -16,7 +16,7 @@ TagManager:
   - Team1
   - Team2
   - Ragdoll
-  - 
+  - Triggers
   - 
   - 
   - 
@@ -42,4 +42,7 @@ TagManager:
   m_SortingLayers:
   - name: Default
     uniqueID: 0
+    locked: 0
+  - name: UI
+    uniqueID: 21403991
     locked: 0
