@@ -38,7 +38,7 @@ public class Player : NetworkBehaviour
 	
 	void Start()
 	{
-		if(SceneManager.GetActiveScene().name == "SampleScene" && IsOwner) SpawnPlayer_ServerRPC();
+		if(SceneManager.GetActiveScene().name == "Map" && IsOwner) SpawnPlayer_ServerRPC();
 	}
 	
 	public override void OnNetworkSpawn()
