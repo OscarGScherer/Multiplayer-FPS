@@ -22,6 +22,8 @@ public class PlayerController : NetworkBehaviour
 	private Gun equippedGun;
 	private Transform footCheck;
 	private bool canJump = true;
+	
+	private Coroutine respawnCoroutine;
 
 	void Awake()
 	{
@@ -44,7 +46,7 @@ public class PlayerController : NetworkBehaviour
 	public void Teleport(Vector3 to)
 	{
 		rb.isKinematic = true;
-		transform.position = to;
+		rb.position = to;
 		rb.isKinematic = false;
 	}
 	
@@ -119,12 +121,13 @@ public class PlayerController : NetworkBehaviour
 		yield return new WaitForSeconds(5f);
 		health.Value = MAX_HEALTH;
 		Respawn_ClientRPC(spawnPoint.position, spawnPoint.rotation);
+		respawnCoroutine = null;
 	}
 	
 	public void Die()
 	{
 		Die_ClientRPC();
-		StartCoroutine(RespawnCoroutine());
+		if(respawnCoroutine == null) respawnCoroutine = StartCoroutine(RespawnCoroutine());
 	}
 	
 	// -----------------------------------
@@ -132,7 +135,7 @@ public class PlayerController : NetworkBehaviour
 	// -----------------------------------
 	
 	[ClientRpc] 
-	void Respawn_ClientRPC(Vector3 position, Quaternion rotation)
+	public void Respawn_ClientRPC(Vector3 position, Quaternion rotation)
 	{
 		Teleport(position);
 		transform.rotation = rotation;
