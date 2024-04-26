@@ -110,7 +110,13 @@ public class PlayerController : NetworkBehaviour
 	public void Move(Vector2 direction)
 	{
 		Vector3 force = (transform.forward * direction.y + transform.right * direction.x) * movementForce * Time.deltaTime;
-		if(!IsTouchingGround()) force*=airSpeedMult;
+		
+		RaycastHit groundCheck;
+		Physics.Raycast(transform.position + Vector3.up * 0.1f, Vector2.down, out groundCheck, 0.4f, ~( (1 << gameObject.layer) + (1 << 9)));
+		
+		if(groundCheck.collider == null) force *= airSpeedMult;
+		else force = Vector3.ProjectOnPlane(force, groundCheck.normal);
+		
 		rb.AddForce(force, ForceMode.Force);
 		SpeedCheck();
 	}
