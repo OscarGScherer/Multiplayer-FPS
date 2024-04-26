@@ -14,13 +14,15 @@ public class CapturePoint : NetworkBehaviour
 	
 	void Start()
 	{
-		if(IsClient) this.enabled = false;
+		if(!IsServer) this.enabled = false;
 	}
 	
 	void OnTriggerEnter(Collider other)
 	{
+		if(!IsServer) return;
+		
 		PlayerBody playerBody = other.GetComponent<PlayerBody>();
-		if (playerBody == null) return;
+		if (playerBody == null || other.tag != "Player") return;
 		
 		if(playerBody.player.team.Value == 1 && !team1MembersOnTop.Contains(playerBody.player))
 			team1MembersOnTop.Add(playerBody.player);
@@ -31,6 +33,8 @@ public class CapturePoint : NetworkBehaviour
 	
 	void OnTriggerExit(Collider other)
 	{
+		if(!IsServer) return;
+		
 		PlayerBody playerBody = other.GetComponent<PlayerBody>();
 		if (playerBody == null) return;
 		
