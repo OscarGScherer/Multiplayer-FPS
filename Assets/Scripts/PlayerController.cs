@@ -21,7 +21,7 @@ public class PlayerController : NetworkBehaviour
 	public float lookSensitivity = 1f;
 	[HideInInspector] public Transform spawnPoint;
 	[HideInInspector] public bool canMove = true;
-	private Rigidbody rb;
+	public Rigidbody rb;
 	private Transform lookTransform;
 	private Gun equippedGun;
 	private bool canJump = true;
@@ -127,7 +127,7 @@ public class PlayerController : NetworkBehaviour
 	// -----------------------------------
 	
 	[ServerRpc]
-	public void FireGun_ServerRPC() { equippedGun.Fire(lookTransform.position, facingDirection.Value); }
+	public void FireGun_ServerRPC() { equippedGun.Fire(this, lookTransform.position, facingDirection.Value); }
 	
 	// -----------------------------------
 	// Only runs server side

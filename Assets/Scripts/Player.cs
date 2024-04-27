@@ -8,23 +8,32 @@ using UnityEngine.SceneManagement;
 
 public class Player : NetworkBehaviour
 {
-	public GameObject playerCharacterPrefab;
+	public GameObject[] characterPrefabs;
 	public int teamLayer;
+	private GameObject currentCharacter;
 	
 	public void SpawnPlayer(Scene scene, LoadSceneMode mode)
 	{
-		SpawnPlayer_ServerRPC(OwnerClientId);
+		SpawnPlayer_ServerRPC(0);
 	}
 	
 	[ServerRpc]
-	private void SpawnPlayer_ServerRPC(ulong ownerClientId)
+	private void SpawnPlayer_ServerRPC(int characterIndex)
 	{
 		Transform spawn = GameObject.FindGameObjectWithTag("Team " + teamLayer % 5 + " Spawn").transform;
-		GameObject go = NetworkManager.Instantiate(playerCharacterPrefab, spawn.position, spawn.rotation);
-		SetLayerAllChildren(go.transform, teamLayer);
-		go.GetComponent<NetworkObject>().SpawnAsPlayerObject(ownerClientId);
-		go.GetComponent<PlayerController>().spawnPoint = spawn;
-		go.GetComponent<PlayerController>().team.Value = teamLayer - 5;
+		currentCharacter = NetworkManager.Instantiate(characterPrefabs[characterIndex], spawn.position, spawn.rotation);
+		SetLayerAllChildren(currentCharacter.transform, teamLayer);
+		currentCharacter.GetComponent<NetworkObject>().SpawnAsPlayerObject(OwnerClientId);
+		currentCharacter.GetComponent<PlayerInput>().player = this;
+		currentCharacter.GetComponent<PlayerController>().spawnPoint = spawn;
+		currentCharacter.GetComponent<PlayerController>().team.Value = teamLayer - 5;
+	}
+	
+	[ServerRpc]
+	public void SwitchCharacter_ServerRPC(int characterIndex)
+	{
+		Destroy(currentCharacter);
+		SpawnPlayer_ServerRPC(characterIndex);
 	}
 	
 	void SetLayerAllChildren(Transform root, int layer)
@@ -38,7 +47,7 @@ public class Player : NetworkBehaviour
 	
 	void Start()
 	{
-		if(SceneManager.GetActiveScene().name == "Map" && IsOwner) SpawnPlayer_ServerRPC(OwnerClientId);
+		if(SceneManager.GetActiveScene().name == "Map" && IsOwner) SpawnPlayer_ServerRPC(0);
 	}
 	
 	public override void OnNetworkSpawn()

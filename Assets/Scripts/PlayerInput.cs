@@ -22,8 +22,24 @@ public class PlayerInput : NetworkBehaviour
 		}
 	}
 	
+	private bool canSwapCharacters = false;
+	public Player player;
 	private InputInfo clientInput = new InputInfo(Vector2.zero, Vector2.zero, false, false);
 	private PlayerController playerController;
+	
+	void OnTriggerEnter(Collider other)
+	{
+		if(other.name == "Team " + playerController.team.Value + " Spawn Room") 
+		{
+			canSwapCharacters = true;
+		}
+	}
+	
+	void OnTriggerExit(Collider other)
+	{
+		if(other.name == "Team " + playerController.team.Value + " Spawn Room") 
+			canSwapCharacters = false;
+	}
 	
 	void Awake()
 	{
@@ -51,6 +67,9 @@ public class PlayerInput : NetworkBehaviour
 		
 		if(playerController.canMove)
 		{
+			if(canSwapCharacters && Input.GetKeyDown(KeyCode.Alpha1)) player.SwitchCharacter_ServerRPC(0);
+			else if(canSwapCharacters && Input.GetKeyDown(KeyCode.Alpha2)) player.SwitchCharacter_ServerRPC(1);
+			
 			//Movement stuff, client side
 			//if(Input.GetKeyDown(KeyCode.Escape)) playerController.Teleport(Vector3.zero);
 			playerController.Move(clientInput.wasdVector);
