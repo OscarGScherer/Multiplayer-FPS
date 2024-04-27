@@ -4,29 +4,23 @@ using Unity.Netcode;
 using Unity.VisualScripting;
 using UnityEngine;
 
-public class Gun : NetworkBehaviour
+public class ProjectileGun : NetworkBehaviour
 {
-	[SerializeField] private float rpm = 300;
+	[SerializeField] private float rpm = 100;
 	[SerializeField] private int maxBullets;
+	
+	public GameObject projectile;
+	public float shotForce = 50f;
+	
 	private int loadedBullets;
 	private Transform barrel;
-	private bool isNextBulletReady = true;
+	private bool isNextRoundReady = true;
 	private Coroutine gunCoroutine;
-	private LineRenderer barrelLR;
 	
 	// -----------------------------------
 	// Only runs client side
 	// -----------------------------------
 	
-	private IEnumerator MuzzleFlashCoroutine(Vector3 hitPos)
-	{
-		barrelLR.enabled = true;
-		barrelLR.SetPosition(0, barrel.transform.position);
-		barrelLR.SetPosition(1, hitPos);
-		yield return new WaitForSeconds(30/rpm);
-		barrelLR.enabled = false;
-		yield return new WaitForSeconds(30/rpm);
-	}
 	
 	// -----------------------------------
 	// Only runs server side
@@ -34,7 +28,7 @@ public class Gun : NetworkBehaviour
 	
 	public void Fire(Vector3 shotOrigin, Vector3 direction)
 	{
-		if(!isNextBulletReady) return;
+		if(!isNextRoundReady) return;
 		RaycastHit hit;
 		Physics.Raycast(shotOrigin, direction, out hit, Mathf.Infinity, ~( (1 << gameObject.layer) + (1 << 9) ));
 		Vector3 hitPos = hit.collider != null ? hit.point : shotOrigin + direction * 1000f;
@@ -44,35 +38,26 @@ public class Gun : NetworkBehaviour
 			if(bodyHit != null) bodyHit.player.Damage(direction, 50f, 2f);
 		}
 		
-		StartCoroutine(CycleNextBulletCoroutine());
-		MuzzleFlash_ClientRPC(hitPos);
+		StartCoroutine(CycleNextRoundCoroutine());
 	}
 	
 	void Awake()
 	{
 		loadedBullets = maxBullets;
 		barrel = transform.GetChild(0).GetChild(0);
-		barrelLR = barrel.GetComponent<LineRenderer>();
-		gunCoroutine = StartCoroutine(CycleNextBulletCoroutine());
+		gunCoroutine = StartCoroutine(CycleNextRoundCoroutine());
 		
 	}
 	
-	private IEnumerator CycleNextBulletCoroutine()
+	private IEnumerator CycleNextRoundCoroutine()
 	{
-		isNextBulletReady = false;
+		isNextRoundReady = false;
 		yield return new WaitForSeconds(60/rpm);
-		isNextBulletReady = true;
+		isNextRoundReady = true;
 	}
 	
 	// -----------------------------------
 	// RPCs the server calls
 	// -----------------------------------
-	
-	[ClientRpc]
-	void MuzzleFlash_ClientRPC(Vector3 hitPos)
-	{
-		StopCoroutine(gunCoroutine);
-		gunCoroutine = StartCoroutine(MuzzleFlashCoroutine(hitPos));
-	}
 	
 }

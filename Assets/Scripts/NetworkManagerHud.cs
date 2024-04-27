@@ -40,7 +40,7 @@ public class NetworkManagerHud : MonoBehaviour
 
 		if (IsRunning(m_NetworkManager))
 		{
-			DrawStatusGUI();
+			//DrawStatusGUI();
 		}
 		else
 		{

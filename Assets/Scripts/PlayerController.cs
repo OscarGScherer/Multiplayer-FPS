@@ -71,6 +71,7 @@ public class PlayerController : NetworkBehaviour
 		if(IsTouchingGround() && canJump)
 		{
 			StartCoroutine(JumpCooldown());
+			if(rb.velocity.y < 0) rb.velocity = new Vector3(rb.velocity.x, 0, rb.velocity.z);
 			AddForce(Vector3.up, magnitude);
 		}
 	}
