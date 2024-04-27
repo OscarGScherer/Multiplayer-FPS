@@ -11,18 +11,18 @@ public class Player : NetworkBehaviour
 	public GameObject playerCharacterPrefab;
 	public int teamLayer;
 	
-	private void SpawnPlayer(Scene scene, LoadSceneMode mode)
+	public void SpawnPlayer(Scene scene, LoadSceneMode mode)
 	{
-		SpawnPlayer_ServerRPC();
+		SpawnPlayer_ServerRPC(OwnerClientId);
 	}
 	
 	[ServerRpc]
-	private void SpawnPlayer_ServerRPC()
+	private void SpawnPlayer_ServerRPC(ulong ownerClientId)
 	{
 		Transform spawn = GameObject.FindGameObjectWithTag("Team " + teamLayer % 5 + " Spawn").transform;
 		GameObject go = NetworkManager.Instantiate(playerCharacterPrefab, spawn.position, spawn.rotation);
 		SetLayerAllChildren(go.transform, teamLayer);
-		go.GetComponent<NetworkObject>().SpawnAsPlayerObject(OwnerClientId);
+		go.GetComponent<NetworkObject>().SpawnAsPlayerObject(ownerClientId);
 		go.GetComponent<PlayerController>().spawnPoint = spawn;
 		go.GetComponent<PlayerController>().team.Value = teamLayer - 5;
 	}
@@ -38,7 +38,7 @@ public class Player : NetworkBehaviour
 	
 	void Start()
 	{
-		if(SceneManager.GetActiveScene().name == "Map" && IsOwner) SpawnPlayer_ServerRPC();
+		if(SceneManager.GetActiveScene().name == "Map" && IsOwner) SpawnPlayer_ServerRPC(OwnerClientId);
 	}
 	
 	public override void OnNetworkSpawn()

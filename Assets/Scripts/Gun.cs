@@ -37,8 +37,8 @@ public class Gun : NetworkBehaviour
 	{
 		if(!isNextBulletReady) return;
 		RaycastHit hit;
-		Physics.Raycast(shotOrigin, direction, out hit, 10f, ~( (1 << gameObject.layer) + (1 << 9) ));
-		Vector3 hitPos = hit.collider != null ? hit.point : shotOrigin + direction * 10f;
+		Physics.Raycast(shotOrigin, direction, out hit, Mathf.Infinity, ~( (1 << gameObject.layer) + (1 << 9) ));
+		Vector3 hitPos = hit.collider != null ? hit.point : shotOrigin + direction * 1000f;
 		if(hit.collider != null)
 		{
 			PlayerBody bodyHit = hit.collider.GetComponent<PlayerBody>();

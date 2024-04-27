@@ -355,37 +355,6 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
---- !u!1 &1232127197608974171
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 8316865810388549310}
-  m_Layer: 6
-  m_Name: Foot check
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &8316865810388549310
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1232127197608974171}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 7971642095448504337}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1507070746874906453
 GameObject:
   m_ObjectHideFlags: 0
@@ -598,7 +567,7 @@ Transform:
   m_GameObject: {fileID: 1902206472488325282}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.015999794, z: 0}
+  m_LocalPosition: {x: 0, y: 0.015999475, z: -0.5}
   m_LocalScale: {x: 2, y: 2, z: 2}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1240,7 +1209,7 @@ CapsuleCollider:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2636215355130451707}
-  m_Material: {fileID: 0}
+  m_Material: {fileID: 13400000, guid: 9e9ea29fc0bf7ac49ab1e3f60a4f8a5f, type: 2}
   m_IncludeLayers:
     serializedVersion: 2
     m_Bits: 0
@@ -1830,7 +1799,7 @@ SphereCollider:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3139293891848104807}
-  m_Material: {fileID: 0}
+  m_Material: {fileID: 13400000, guid: 9e9ea29fc0bf7ac49ab1e3f60a4f8a5f, type: 2}
   m_IncludeLayers:
     serializedVersion: 2
     m_Bits: 0
@@ -4977,7 +4946,6 @@ Transform:
   m_Children:
   - {fileID: 3495842317627867267}
   - {fileID: 2977998458955320210}
-  - {fileID: 8316865810388549310}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &4733437156304945301
@@ -5010,9 +4978,15 @@ MonoBehaviour:
     m_InternalValue: 200
   team:
     m_InternalValue: 0
+  maxHealth: 200
+  maxMovementSpeed: 10
+  movementForce: 3000
+  groundDrag: 7
+  airSpeedMult: 0.2
+  jumpForce: 15
+  lookSensitivity: 1
   spawnPoint: {fileID: 0}
   canMove: 1
-  lookSensitivity: 1
 --- !u!54 &9098124812885334693
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -5022,7 +4996,7 @@ Rigidbody:
   m_GameObject: {fileID: 8266235499263150120}
   serializedVersion: 4
   m_Mass: 1
-  m_Drag: 1
+  m_Drag: 0
   m_AngularDrag: 0.05
   m_CenterOfMass: {x: 0, y: 0, z: 0}
   m_InertiaTensor: {x: 1, y: 1, z: 1}
