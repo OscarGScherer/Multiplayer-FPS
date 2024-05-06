@@ -6,6 +6,7 @@ TagManager:
   tags:
   - Team 1 Spawn
   - Team 2 Spawn
+  - Abilities
   layers:
   - Default
   - TransparentFX

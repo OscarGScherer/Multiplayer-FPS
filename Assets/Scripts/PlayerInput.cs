@@ -21,11 +21,15 @@ public class PlayerInput : NetworkBehaviour
 			this.spacebar = spacebar;
 		}
 	}
-	
 	private bool canSwapCharacters = false;
 	public Player player;
 	private InputInfo clientInput = new InputInfo(Vector2.zero, Vector2.zero, false, false);
 	private PlayerController playerController;
+	private Canvas ui;
+	private RectTransform target;
+	private Camera camera;
+	
+	private Ability shift, q, e;
 	
 	void OnTriggerEnter(Collider other)
 	{
@@ -41,15 +45,65 @@ public class PlayerInput : NetworkBehaviour
 			canSwapCharacters = false;
 	}
 	
+	Transform FindWithTag(Transform root, string tag)
+	{
+		foreach (Transform t in root.GetComponentsInChildren<Transform>())
+		{
+			if (t.CompareTag(tag)) return t;
+		}
+		return null;
+	}
+	
 	void Awake()
 	{
 		playerController = GetComponent<PlayerController>();
+		ui = transform.GetComponentInChildren<Canvas>();
+		camera = transform.GetComponentInChildren<Camera>();
+		target = ui.transform.GetChild(0).GetComponent<RectTransform>();
+		
+		Transform abilityParent = FindWithTag(transform, "Abilities");
+		shift = abilityParent.GetChild(0).GetComponent<Ability>();
+		q = abilityParent.GetChild(1).GetComponent<Ability>();
+		e = abilityParent.GetChild(2).GetComponent<Ability>();
 		//Cursor.visible = false;
 	}
 	
 	public override void OnNetworkSpawn()
 	{	
 		if(IsOwner) playerController.EnableCamera();
+		MatchInfo.players.Add(gameObject);
+	}
+
+	public override void OnNetworkDespawn()
+	{
+		MatchInfo.players.Remove(gameObject);
+	}
+
+	public PlayerController GetTargetedTeammate()
+	{
+		PlayerController targetedTeammate = null;
+		float closestAngle = 20f;
+		foreach(GameObject p in MatchInfo.players)
+		{
+			PlayerController otherPlayer = p.GetComponent<PlayerController>();
+			if(otherPlayer == null || otherPlayer == playerController) continue;
+			if(otherPlayer.team.Value != playerController.team.Value) continue;
+			
+			Vector3 dir = otherPlayer.transform.GetChild(0).position - transform.GetChild(0).position;
+			float angle = Vector3.Angle(playerController.facingDirection.Value, dir);
+			
+			if(angle < closestAngle) targetedTeammate = otherPlayer;
+		}
+		return targetedTeammate;
+	}
+	
+	public void SetTargetToWorldObject(Transform worldObject)
+	{
+		var screen = camera.WorldToScreenPoint(worldObject.transform.position);
+		//screen.z = (canvas.transform.position - ui.transform.position).magnitude;
+		//var position = ui.ScreenToWorldPoint(screen);
+		//element.position = position; // element is the Text show in the UI.
+		target.anchoredPosition = screen;
 	}
 
 	void Update()
@@ -67,6 +121,16 @@ public class PlayerInput : NetworkBehaviour
 		
 		if(playerController.canMove)
 		{
+			PlayerController targettedTeammate = GetTargetedTeammate();
+			if(targettedTeammate != null)
+			{
+				target.gameObject.SetActive(true);
+				SetTargetToWorldObject(targettedTeammate.transform);
+			}
+			else target.gameObject.SetActive(false);
+			
+			if(Input.GetKey(KeyCode.Q)) q.TryCast(playerController, targettedTeammate, null, Vector3.zero);
+			
 			if(canSwapCharacters && Input.GetKeyDown(KeyCode.Alpha1)) player.SwitchCharacter_ServerRPC(0);
 			else if(canSwapCharacters && Input.GetKeyDown(KeyCode.Alpha2)) player.SwitchCharacter_ServerRPC(1);
 			

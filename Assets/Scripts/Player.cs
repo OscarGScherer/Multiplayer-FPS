@@ -10,7 +10,7 @@ public class Player : NetworkBehaviour
 {
 	public GameObject[] characterPrefabs;
 	public int teamLayer;
-	private GameObject currentCharacter;
+	public GameObject currentCharacter;
 	
 	public void SpawnPlayer(Scene scene, LoadSceneMode mode)
 	{
@@ -41,7 +41,7 @@ public class Player : NetworkBehaviour
 		var children = root.GetComponentsInChildren<Transform>(includeInactive: true);
 		foreach (var child in children)
 		{
-			child.gameObject.layer = layer;
+			if(child.gameObject.layer != 5) child.gameObject.layer = layer;
 		}
 	}
 	
@@ -52,7 +52,8 @@ public class Player : NetworkBehaviour
 	
 	public override void OnNetworkSpawn()
 	{
-		teamLayer = 6 + MatchInfo.playerCount.Value % 2;
+		//teamLayer = 6 + MatchInfo.playerCount.Value % 2;
+		teamLayer = 6;
 		if(IsOwner) 
 		{
 			MatchInfo.AddPlayer_ServerRPC();
