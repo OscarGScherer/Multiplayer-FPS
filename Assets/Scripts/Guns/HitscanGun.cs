@@ -1,18 +1,18 @@
 using System.Collections;
 using System.Collections.Generic;
 using Unity.Netcode;
-using Unity.VisualScripting;
 using UnityEngine;
 
-public class Gun : NetworkBehaviour
+public class HitscanGun : Gun
 {
-	[SerializeField] private float rpm = 300;
-	[SerializeField] private int maxBullets;
-	private int loadedBullets;
-	private Transform barrel;
 	private bool isNextBulletReady = true;
-	private Coroutine gunCoroutine;
-	private LineRenderer barrelLR;
+	private LineRenderer lr;
+	
+	protected override void Awake()
+	{
+		base.Awake();
+		lr = barrel.GetComponent<LineRenderer>();
+	}
 	
 	// -----------------------------------
 	// Only runs client side
@@ -20,11 +20,11 @@ public class Gun : NetworkBehaviour
 	
 	private IEnumerator MuzzleFlashCoroutine(Vector3 hitPos)
 	{
-		barrelLR.enabled = true;
-		barrelLR.SetPosition(0, barrel.transform.position);
-		barrelLR.SetPosition(1, hitPos);
+		lr.enabled = true;
+		lr.SetPosition(0, barrel.transform.position);
+		lr.SetPosition(1, hitPos);
 		yield return new WaitForSeconds(30/rpm);
-		barrelLR.enabled = false;
+		lr.enabled = false;
 		yield return new WaitForSeconds(30/rpm);
 	}
 	
@@ -32,7 +32,7 @@ public class Gun : NetworkBehaviour
 	// Only runs server side
 	// -----------------------------------
 	
-	public void Fire(Vector3 shotOrigin, Vector3 direction)
+	public override void Fire(PlayerController shooter, Vector3 shotOrigin, Vector3 direction)
 	{
 		if(!isNextBulletReady) return;
 		RaycastHit hit;
@@ -44,24 +44,8 @@ public class Gun : NetworkBehaviour
 			if(bodyHit != null) bodyHit.player.Damage(direction, 50f, 2f);
 		}
 		
-		StartCoroutine(CycleNextBulletCoroutine());
+		StartCoroutine(CycleNextRoundCoroutine());
 		MuzzleFlash_ClientRPC(hitPos);
-	}
-	
-	void Awake()
-	{
-		loadedBullets = maxBullets;
-		barrel = transform.GetChild(0).GetChild(0);
-		barrelLR = barrel.GetComponent<LineRenderer>();
-		gunCoroutine = StartCoroutine(CycleNextBulletCoroutine());
-		
-	}
-	
-	private IEnumerator CycleNextBulletCoroutine()
-	{
-		isNextBulletReady = false;
-		yield return new WaitForSeconds(60/rpm);
-		isNextBulletReady = true;
 	}
 	
 	// -----------------------------------
@@ -74,5 +58,4 @@ public class Gun : NetworkBehaviour
 		StopCoroutine(gunCoroutine);
 		gunCoroutine = StartCoroutine(MuzzleFlashCoroutine(hitPos));
 	}
-	
 }

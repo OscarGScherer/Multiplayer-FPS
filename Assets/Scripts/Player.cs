@@ -8,23 +8,32 @@ using UnityEngine.SceneManagement;
 
 public class Player : NetworkBehaviour
 {
-	public GameObject playerCharacterPrefab;
+	public GameObject[] characterPrefabs;
 	public int teamLayer;
+	public GameObject currentCharacter;
 	
 	public void SpawnPlayer(Scene scene, LoadSceneMode mode)
 	{
-		SpawnPlayer_ServerRPC(OwnerClientId);
+		SpawnPlayer_ServerRPC(0);
 	}
 	
 	[ServerRpc]
-	private void SpawnPlayer_ServerRPC(ulong ownerClientId)
+	private void SpawnPlayer_ServerRPC(int characterIndex)
 	{
 		Transform spawn = GameObject.FindGameObjectWithTag("Team " + teamLayer % 5 + " Spawn").transform;
-		GameObject go = NetworkManager.Instantiate(playerCharacterPrefab, spawn.position, spawn.rotation);
-		SetLayerAllChildren(go.transform, teamLayer);
-		go.GetComponent<NetworkObject>().SpawnAsPlayerObject(ownerClientId);
-		go.GetComponent<PlayerController>().spawnPoint = spawn;
-		go.GetComponent<PlayerController>().team.Value = teamLayer - 5;
+		currentCharacter = NetworkManager.Instantiate(characterPrefabs[characterIndex], spawn.position, spawn.rotation);
+		SetLayerAllChildren(currentCharacter.transform, teamLayer);
+		currentCharacter.GetComponent<NetworkObject>().SpawnAsPlayerObject(OwnerClientId);
+		currentCharacter.GetComponent<PlayerInput>().player = this;
+		currentCharacter.GetComponent<PlayerController>().spawnPoint = spawn;
+		currentCharacter.GetComponent<PlayerController>().team.Value = teamLayer - 5;
+	}
+	
+	[ServerRpc]
+	public void SwitchCharacter_ServerRPC(int characterIndex)
+	{
+		Destroy(currentCharacter);
+		SpawnPlayer_ServerRPC(characterIndex);
 	}
 	
 	void SetLayerAllChildren(Transform root, int layer)
@@ -32,18 +41,19 @@ public class Player : NetworkBehaviour
 		var children = root.GetComponentsInChildren<Transform>(includeInactive: true);
 		foreach (var child in children)
 		{
-			child.gameObject.layer = layer;
+			if(child.gameObject.layer != 5) child.gameObject.layer = layer;
 		}
 	}
 	
 	void Start()
 	{
-		if(SceneManager.GetActiveScene().name == "Map" && IsOwner) SpawnPlayer_ServerRPC(OwnerClientId);
+		if(SceneManager.GetActiveScene().name == "Map" && IsOwner) SpawnPlayer_ServerRPC(0);
 	}
 	
 	public override void OnNetworkSpawn()
 	{
-		teamLayer = 6 + MatchInfo.playerCount.Value % 2;
+		//teamLayer = 6 + MatchInfo.playerCount.Value % 2;
+		teamLayer = 6;
 		if(IsOwner) 
 		{
 			MatchInfo.AddPlayer_ServerRPC();

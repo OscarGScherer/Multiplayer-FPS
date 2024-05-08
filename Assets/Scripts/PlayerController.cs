@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Unity.Netcode;
+using UnityEngine.Rendering;
 
 public class PlayerController : NetworkBehaviour
 {
@@ -21,7 +22,7 @@ public class PlayerController : NetworkBehaviour
 	public float lookSensitivity = 1f;
 	[HideInInspector] public Transform spawnPoint;
 	[HideInInspector] public bool canMove = true;
-	private Rigidbody rb;
+	public Rigidbody rb;
 	private Transform lookTransform;
 	private Gun equippedGun;
 	private bool canJump = true;
@@ -45,13 +46,14 @@ public class PlayerController : NetworkBehaviour
 		
 		if(IsTouchingGround()) rb.drag = groundDrag;
 		else rb.drag = 0;
-		
 	}
 	
 	public void EnableCamera()
 	{
 		lookTransform.GetComponent<Camera>().enabled = true;
 		lookTransform.GetComponent<AudioListener>().enabled = true;
+		
+		lookTransform.GetChild(0).GetComponent<CanvasGroup>().alpha = 1.0f;
 	}
 	
 	public void Teleport(Vector3 to)
@@ -83,7 +85,7 @@ public class PlayerController : NetworkBehaviour
 		canJump = true;
 	}
 	
-	private void AddForce(Vector3 force, float magnitude)
+	public void AddForce(Vector3 force, float magnitude)
 	{
 		rb.AddForce(force.normalized * magnitude, ForceMode.Impulse);
 	}
@@ -101,11 +103,25 @@ public class PlayerController : NetworkBehaviour
 		equippedGun.transform.localEulerAngles = new Vector3(xRot, 0, 0);
 	}
 	
-	public void SpeedCheck()
+	public void AddForceWithSpeedCheck(Vector3 force)
 	{
-		Vector3 horizontalSpeed = new Vector3(rb.velocity.x, 0, rb.velocity.z);
-		if(horizontalSpeed.magnitude > maxMovementSpeed)
-			rb.velocity = horizontalSpeed.normalized * maxMovementSpeed + Vector3.up * rb.velocity.y;	
+		Vector3 velocityInDirection = Vector3.Project(rb.velocity, force.normalized);
+		
+		if(velocityInDirection.magnitude > maxMovementSpeed) return;
+		else
+		{
+			rb.AddForce(force, ForceMode.Force);
+			velocityInDirection = Vector3.Project(rb.velocity, force.normalized);
+			if(velocityInDirection.magnitude > maxMovementSpeed)
+			{
+				Vector3 perpForce1 = Quaternion.Euler(90,0,0) * force.normalized;
+				Vector3 perpForce2 = Vector3.Cross(force, perpForce1);
+				rb.velocity = 
+					velocityInDirection.normalized * maxMovementSpeed
+					+ Vector3.Project(rb.velocity, perpForce1) 
+					+ Vector3.Project(rb.velocity, perpForce2);
+			}
+		}	
 	}
 	
 	public void Move(Vector2 direction)
@@ -118,8 +134,7 @@ public class PlayerController : NetworkBehaviour
 		if(groundCheck.collider == null) force *= airSpeedMult;
 		else force = Vector3.ProjectOnPlane(force, groundCheck.normal);
 		
-		rb.AddForce(force, ForceMode.Force);
-		SpeedCheck();
+		AddForceWithSpeedCheck(force);
 	}
 	
 	// -----------------------------------
@@ -127,7 +142,7 @@ public class PlayerController : NetworkBehaviour
 	// -----------------------------------
 	
 	[ServerRpc]
-	public void FireGun_ServerRPC() { equippedGun.Fire(lookTransform.position, facingDirection.Value); }
+	public void FireGun_ServerRPC() { equippedGun.Fire(this, lookTransform.position, facingDirection.Value); }
 	
 	// -----------------------------------
 	// Only runs server side
