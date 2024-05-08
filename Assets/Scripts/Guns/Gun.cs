@@ -11,13 +11,12 @@ public class Gun : NetworkBehaviour
 	protected int loadedRounds;
 	protected Transform barrel;
 	protected bool isNextRoundReady = true;
-	protected Coroutine gunCoroutine;
 	
 	protected virtual void Awake()
 	{
 		loadedRounds = roundCapacity;
 		barrel = transform.GetChild(0).GetChild(0);
-		gunCoroutine = StartCoroutine(CycleNextRoundCoroutine());
+		StartCoroutine(CycleNextRoundCoroutine());
 	}
 	
 	// -----------------------------------

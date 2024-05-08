@@ -46,9 +46,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   characterPrefabs:
+  - {fileID: 8266235499263150120, guid: aea95980123f1d54e90cc638d3607c48, type: 3}
   - {fileID: 8266235499263150120, guid: b3b56aa0ed9874a42b9a31e90e42a9a6, type: 3}
-  - {fileID: 8266235499263150120, guid: c99ed692b8662ef42ad499d4b5835caf, type: 3}
   teamLayer: 0
+  currentCharacter: {fileID: 0}
 --- !u!114 &6800398951091216676
 MonoBehaviour:
   m_ObjectHideFlags: 0

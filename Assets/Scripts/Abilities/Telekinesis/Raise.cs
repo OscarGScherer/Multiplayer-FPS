@@ -10,6 +10,6 @@ public class Raise : Ability
     }
 	protected override void Cast(PlayerController caster, PlayerController target, Transform origin, Vector3 direction)
 	{
-		target.AddForce(Vector3.up, 15);
+		target.AddForce_ServerRPC(Vector3.up, 15);
 	}
 }

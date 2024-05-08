@@ -10,6 +10,6 @@ public class Push : Ability
     }
 	protected override void Cast(PlayerController caster, PlayerController target, Transform origin, Vector3 direction)
 	{
-		target.AddForce((target.transform.position - caster.transform.position).normalized, 15);
+		target.AddForce_ServerRPC((target.transform.position + Vector3.up - caster.transform.position).normalized, 15);
 	}
 }

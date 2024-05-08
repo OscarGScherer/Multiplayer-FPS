@@ -28,6 +28,7 @@ public class PlayerInput : NetworkBehaviour
 	private Canvas ui;
 	private RectTransform target;
 	private Camera camera;
+	private Transform projectileOrigin;
 	
 	private Ability shift, q, e;
 	
@@ -60,6 +61,7 @@ public class PlayerInput : NetworkBehaviour
 		ui = transform.GetComponentInChildren<Canvas>();
 		camera = transform.GetComponentInChildren<Camera>();
 		target = ui.transform.GetChild(0).GetComponent<RectTransform>();
+		projectileOrigin = camera.transform.GetChild(1);
 		
 		Transform abilityParent = FindWithTag(transform, "Abilities");
 		shift = abilityParent.GetChild(0).GetComponent<Ability>();
@@ -72,6 +74,12 @@ public class PlayerInput : NetworkBehaviour
 	{	
 		if(IsOwner) playerController.EnableCamera();
 		MatchInfo.players.Add(gameObject);
+		for(int i = 0; i < MatchInfo.players.Count; i++)
+			if(MatchInfo.players[i] == null)
+			{
+				MatchInfo.players.RemoveAt(i);
+				i--;
+			} 
 	}
 
 	public override void OnNetworkDespawn()
@@ -85,6 +93,7 @@ public class PlayerInput : NetworkBehaviour
 		float closestAngle = 20f;
 		foreach(GameObject p in MatchInfo.players)
 		{
+			if(p == null) continue;
 			PlayerController otherPlayer = p.GetComponent<PlayerController>();
 			if(otherPlayer == null || otherPlayer == playerController) continue;
 			if(otherPlayer.team.Value != playerController.team.Value) continue;
@@ -129,7 +138,9 @@ public class PlayerInput : NetworkBehaviour
 			}
 			else target.gameObject.SetActive(false);
 			
-			if(Input.GetKey(KeyCode.Q)) q.TryCast(playerController, targettedTeammate, null, Vector3.zero);
+			if(Input.GetKey(KeyCode.Q)) q.TryCast(playerController, targettedTeammate, projectileOrigin, playerController.facingDirection.Value);
+			if(Input.GetKey(KeyCode.LeftShift)) shift.TryCast(playerController, targettedTeammate, projectileOrigin, playerController.facingDirection.Value);
+			if(Input.GetKey(KeyCode.E)) e.TryCast(playerController, targettedTeammate, projectileOrigin, playerController.facingDirection.Value);
 			
 			if(canSwapCharacters && Input.GetKeyDown(KeyCode.Alpha1)) player.SwitchCharacter_ServerRPC(0);
 			else if(canSwapCharacters && Input.GetKeyDown(KeyCode.Alpha2)) player.SwitchCharacter_ServerRPC(1);

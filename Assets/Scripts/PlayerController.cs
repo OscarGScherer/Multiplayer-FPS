@@ -34,6 +34,18 @@ public class PlayerController : NetworkBehaviour
 		if(!IsOwner) rb.isKinematic = true;
 		lookTransform = transform.GetChild(0).GetChild(0).GetChild(0);
 		equippedGun = GetComponentInChildren<Gun>();
+		team.OnValueChanged += SetTeam;
+	}
+	
+	void SetTeam(int previousTeam, int newTeam)
+	{
+		spawnPoint = GameObject.FindGameObjectWithTag("Team " + newTeam + " Spawn").transform;
+		transform.GetChild(0).GetComponent<MeshRenderer>().material = Resources.Load<Material>("Team " + newTeam);
+		var children = transform.GetComponentsInChildren<Transform>(includeInactive: true);
+		foreach (var child in children)
+		{
+			if(child.gameObject.layer != 5) child.gameObject.layer = newTeam + 5;
+		}
 	}
 
 	// -----------------------------------
@@ -44,8 +56,13 @@ public class PlayerController : NetworkBehaviour
 	{
 		if(!IsOwner) return;
 		
-		if(IsTouchingGround()) rb.drag = groundDrag;
-		else rb.drag = 0;
+		if(health.Value > 0)
+		{
+			if(IsTouchingGround()) rb.drag = groundDrag;
+			else rb.drag = 0;	
+		}
+		
+		facingDirection.Value = lookTransform.forward;
 	}
 	
 	public void EnableCamera()
@@ -98,8 +115,6 @@ public class PlayerController : NetworkBehaviour
 		float xRot = lookTransform.localEulerAngles.x - mouseRotation.y * lookSensitivity;
 		lookTransform.localEulerAngles = new Vector3(xRot, 0, 0);
 		
-		facingDirection.Value = lookTransform.forward;
-		
 		equippedGun.transform.localEulerAngles = new Vector3(xRot, 0, 0);
 	}
 	
@@ -143,6 +158,8 @@ public class PlayerController : NetworkBehaviour
 	
 	[ServerRpc]
 	public void FireGun_ServerRPC() { equippedGun.Fire(this, lookTransform.position, facingDirection.Value); }
+	[ServerRpc]
+	public void AddForce_ServerRPC(Vector3 force, float magnitude) => AddForce_ClientRPC(force, magnitude);
 	
 	// -----------------------------------
 	// Only runs server side
@@ -174,7 +191,7 @@ public class PlayerController : NetworkBehaviour
 	// -----------------------------------
 	// RPCs the server calls
 	// -----------------------------------
-	
+	[ClientRpc] public void AddForce_ClientRPC(Vector3 force, float magnitude) => AddForce(force, magnitude);
 	[ClientRpc] 
 	public void Respawn_ClientRPC(Vector3 position, Quaternion rotation)
 	{
@@ -188,6 +205,7 @@ public class PlayerController : NetworkBehaviour
 	private void Die_ClientRPC()
 	{
 		rb.freezeRotation = false;
+		rb.drag = 1;
 		canMove = false;
 	}
 	

@@ -5,9 +5,18 @@ using UnityEngine;
 
 public class Dummy : MonoBehaviour
 {
+	public int team = 1;
+	private PlayerController playerController;
+	
 	public void Start()
 	{
 		MatchInfo.players.Add(gameObject);
-		GetComponent<PlayerController>().team.Value = gameObject.layer - 5;
+		playerController = GetComponent<PlayerController>();
+		playerController.team.Value = team;
+	}
+	
+	public void Update()
+	{
+		playerController.FireGun_ServerRPC();
 	}
 }

@@ -11,6 +11,6 @@ public class Pull : Ability
 
     protected override void Cast(PlayerController caster, PlayerController target, Transform origin, Vector3 direction)
 	{
-		target.AddForce((caster.transform.position - target.transform.position).normalized, 15);
+		target.AddForce_ServerRPC((caster.transform.position + Vector3.up - target.transform.position).normalized, 15);
 	}
 }

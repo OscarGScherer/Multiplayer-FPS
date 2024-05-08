@@ -3,31 +3,12 @@ using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
 
-public class HitscanGun : Gun
+public class DPS1Gun : HitscanGun
 {
-	public float damage;
-	protected LineRenderer lr;
-	protected Coroutine muzzleFlashCoroutine;
-	
-	protected override void Awake()
-	{
-		base.Awake();
-		lr = barrel.GetComponent<LineRenderer>();
-	}
 	
 	// -----------------------------------
 	// Only runs client side
 	// -----------------------------------
-	
-	protected IEnumerator MuzzleFlashCoroutine(Vector3 hitPos)
-	{
-		lr.enabled = true;
-		lr.SetPosition(0, barrel.transform.position);
-		lr.SetPosition(1, hitPos);
-		yield return new WaitForSeconds(30/rpm);
-		lr.enabled = false;
-		yield return new WaitForSeconds(30/rpm);
-	}
 	
 	// -----------------------------------
 	// Only runs server side
@@ -42,7 +23,10 @@ public class HitscanGun : Gun
 		if(hit.collider != null)
 		{
 			PlayerBody bodyHit = hit.collider.GetComponent<PlayerBody>();
-			if(bodyHit != null) bodyHit.player.Damage(direction, damage, 2f);
+			if(bodyHit != null) bodyHit.player.Damage(direction, damage, 5f);
+			
+			ReflectCoin coin = hit.collider.GetComponent<ReflectCoin>();
+			if(coin != null && coin.OwnerClientId == OwnerClientId) coin.ReflectShot(shooter, damage, rpm, 5f);
 		}
 		
 		StartCoroutine(CycleNextRoundCoroutine());
@@ -52,11 +36,4 @@ public class HitscanGun : Gun
 	// -----------------------------------
 	// RPCs the server calls
 	// -----------------------------------
-	
-	[ClientRpc]
-	protected void MuzzleFlash_ClientRPC(Vector3 hitPos)
-	{
-		if(muzzleFlashCoroutine != null) StopCoroutine(muzzleFlashCoroutine);
-		muzzleFlashCoroutine = StartCoroutine(MuzzleFlashCoroutine(hitPos));
-	}
 }

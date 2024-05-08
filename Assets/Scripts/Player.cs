@@ -22,10 +22,8 @@ public class Player : NetworkBehaviour
 	{
 		Transform spawn = GameObject.FindGameObjectWithTag("Team " + teamLayer % 5 + " Spawn").transform;
 		currentCharacter = NetworkManager.Instantiate(characterPrefabs[characterIndex], spawn.position, spawn.rotation);
-		SetLayerAllChildren(currentCharacter.transform, teamLayer);
 		currentCharacter.GetComponent<NetworkObject>().SpawnAsPlayerObject(OwnerClientId);
 		currentCharacter.GetComponent<PlayerInput>().player = this;
-		currentCharacter.GetComponent<PlayerController>().spawnPoint = spawn;
 		currentCharacter.GetComponent<PlayerController>().team.Value = teamLayer - 5;
 	}
 	
@@ -36,15 +34,6 @@ public class Player : NetworkBehaviour
 		SpawnPlayer_ServerRPC(characterIndex);
 	}
 	
-	void SetLayerAllChildren(Transform root, int layer)
-	{
-		var children = root.GetComponentsInChildren<Transform>(includeInactive: true);
-		foreach (var child in children)
-		{
-			if(child.gameObject.layer != 5) child.gameObject.layer = layer;
-		}
-	}
-	
 	void Start()
 	{
 		if(SceneManager.GetActiveScene().name == "Map" && IsOwner) SpawnPlayer_ServerRPC(0);
@@ -52,8 +41,7 @@ public class Player : NetworkBehaviour
 	
 	public override void OnNetworkSpawn()
 	{
-		//teamLayer = 6 + MatchInfo.playerCount.Value % 2;
-		teamLayer = 6;
+		teamLayer = 6 + MatchInfo.playerCount.Value % 2;
 		if(IsOwner) 
 		{
 			MatchInfo.AddPlayer_ServerRPC();
