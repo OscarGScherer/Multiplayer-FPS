@@ -18,6 +18,7 @@ public class NetworkManagerHud : MonoBehaviour
 	// This is needed to make the port field more convenient. GUILayout.TextField is very limited and we want to be able to clear the field entirely so we can't cache this as ushort.
 	string m_PortString = "7777";
 	string m_ConnectAddress = "127.0.0.1";
+	public static string username = "Player";
 
 	public Vector2 DrawOffset = new Vector2(10, 10);
 
@@ -73,6 +74,9 @@ public class NetworkManagerHud : MonoBehaviour
 		}
 
 		GUILayout.EndHorizontal();
+		
+		GUILayout.Label("User name", m_LabelTextStyle);
+		username = GUILayout.TextField(username);
 
 		if (GUILayout.Button("Host (Server + Client)"))
 		{ 

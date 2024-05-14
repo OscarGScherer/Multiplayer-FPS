@@ -4,9 +4,9 @@
 TagManager:
   serializedVersion: 2
   tags:
-  - Team 1 Spawn
-  - Team 2 Spawn
   - Abilities
+  - Team White Spawn
+  - Team Black Spawn
   layers:
   - Default
   - TransparentFX

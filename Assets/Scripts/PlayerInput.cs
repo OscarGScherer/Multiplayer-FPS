@@ -22,7 +22,6 @@ public class PlayerInput : NetworkBehaviour
 		}
 	}
 	private bool canSwapCharacters = false;
-	public Player player;
 	private InputInfo clientInput = new InputInfo(Vector2.zero, Vector2.zero, false, false);
 	private PlayerController playerController;
 	private Canvas ui;
@@ -34,7 +33,7 @@ public class PlayerInput : NetworkBehaviour
 	
 	void OnTriggerEnter(Collider other)
 	{
-		if(other.name == "Team " + playerController.team.Value + " Spawn Room") 
+		if(other.name == "Team " + playerController.team + " Spawn") 
 		{
 			canSwapCharacters = true;
 		}
@@ -42,7 +41,7 @@ public class PlayerInput : NetworkBehaviour
 	
 	void OnTriggerExit(Collider other)
 	{
-		if(other.name == "Team " + playerController.team.Value + " Spawn Room") 
+		if(other.name == "Team " + playerController.team + " Spawn") 
 			canSwapCharacters = false;
 	}
 	
@@ -73,30 +72,26 @@ public class PlayerInput : NetworkBehaviour
 	public override void OnNetworkSpawn()
 	{	
 		if(IsOwner) playerController.EnableCamera();
-		MatchInfo.players.Add(gameObject);
-		for(int i = 0; i < MatchInfo.players.Count; i++)
-			if(MatchInfo.players[i] == null)
+		
+		MatchInfo.playersCharacters.Add(gameObject);
+		for(int i = 0; i < MatchInfo.playersCharacters.Count; i++)
+			if(MatchInfo.playersCharacters[i] == null)
 			{
-				MatchInfo.players.RemoveAt(i);
+				MatchInfo.playersCharacters.RemoveAt(i);
 				i--;
 			} 
-	}
-
-	public override void OnNetworkDespawn()
-	{
-		MatchInfo.players.Remove(gameObject);
 	}
 
 	public PlayerController GetTargetedTeammate()
 	{
 		PlayerController targetedTeammate = null;
 		float closestAngle = 20f;
-		foreach(GameObject p in MatchInfo.players)
+		foreach(GameObject p in MatchInfo.playersCharacters)
 		{
 			if(p == null) continue;
 			PlayerController otherPlayer = p.GetComponent<PlayerController>();
 			if(otherPlayer == null || otherPlayer == playerController) continue;
-			if(otherPlayer.team.Value != playerController.team.Value) continue;
+			if(otherPlayer.team != playerController.team) continue;
 			
 			Vector3 dir = otherPlayer.transform.GetChild(0).position - transform.GetChild(0).position;
 			float angle = Vector3.Angle(playerController.facingDirection.Value, dir);
@@ -142,8 +137,8 @@ public class PlayerInput : NetworkBehaviour
 			if(Input.GetKey(KeyCode.LeftShift)) shift.TryCast(playerController, targettedTeammate, projectileOrigin, playerController.facingDirection.Value);
 			if(Input.GetKey(KeyCode.E)) e.TryCast(playerController, targettedTeammate, projectileOrigin, playerController.facingDirection.Value);
 			
-			if(canSwapCharacters && Input.GetKeyDown(KeyCode.Alpha1)) player.SwitchCharacter_ServerRPC(0);
-			else if(canSwapCharacters && Input.GetKeyDown(KeyCode.Alpha2)) player.SwitchCharacter_ServerRPC(1);
+			if(canSwapCharacters && Input.GetKeyDown(KeyCode.Alpha1)) playerController.player.SwitchCharacter_ServerRPC(0);
+			else if(canSwapCharacters && Input.GetKeyDown(KeyCode.Alpha2)) playerController.player.SwitchCharacter_ServerRPC(1);
 			
 			//Movement stuff, client side
 			//if(Input.GetKeyDown(KeyCode.Escape)) playerController.Teleport(Vector3.zero);

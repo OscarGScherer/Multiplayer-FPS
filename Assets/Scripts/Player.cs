@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using Unity.Netcode;
@@ -9,22 +10,28 @@ using UnityEngine.SceneManagement;
 public class Player : NetworkBehaviour
 {
 	public GameObject[] characterPrefabs;
-	public int teamLayer;
 	public GameObject currentCharacter;
 	
-	public void SpawnPlayer(Scene scene, LoadSceneMode mode)
+	public enum Team
 	{
-		SpawnPlayer_ServerRPC(0);
+		Spectator = 0,
+		White = 1,
+		Black = 2
+	}
+	public NetworkVariable<Team> team = new NetworkVariable<Team>(Team.Spectator, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+	
+	[ServerRpc(RequireOwnership = false)]
+	public void SpawnPlayer_ServerRPC(int characterIndex)
+	{
+		Transform spawn = GameObject.FindGameObjectWithTag("Team " + team.Value + " Spawn").transform;
+		currentCharacter = NetworkManager.Instantiate(characterPrefabs[characterIndex], spawn.position, spawn.rotation);
+		currentCharacter.GetComponent<NetworkObject>().SpawnWithOwnership(OwnerClientId);
 	}
 	
-	[ServerRpc]
-	private void SpawnPlayer_ServerRPC(int characterIndex)
+	[ClientRpc]
+	public void DestroyCharacter_ClientRPC()
 	{
-		Transform spawn = GameObject.FindGameObjectWithTag("Team " + teamLayer % 5 + " Spawn").transform;
-		currentCharacter = NetworkManager.Instantiate(characterPrefabs[characterIndex], spawn.position, spawn.rotation);
-		currentCharacter.GetComponent<NetworkObject>().SpawnAsPlayerObject(OwnerClientId);
-		currentCharacter.GetComponent<PlayerInput>().player = this;
-		currentCharacter.GetComponent<PlayerController>().team.Value = teamLayer - 5;
+		Destroy(currentCharacter);
 	}
 	
 	[ServerRpc]
@@ -34,19 +41,32 @@ public class Player : NetworkBehaviour
 		SpawnPlayer_ServerRPC(characterIndex);
 	}
 	
-	void Start()
+	[ServerRpc]
+	private void SetClientName_ServerRPC(string name)
 	{
-		if(SceneManager.GetActiveScene().name == "Map" && IsOwner) SpawnPlayer_ServerRPC(0);
+		this.name = name;
+		Rename_ClientRPC(name);
 	}
+	[ClientRpc]
+	public void Rename_ClientRPC(string name) => this.name = name;
 	
 	public override void OnNetworkSpawn()
 	{
-		teamLayer = 6 + MatchInfo.playerCount.Value % 2;
-		if(IsOwner) 
+		if(IsOwner)
 		{
-			MatchInfo.AddPlayer_ServerRPC();
-			SceneManager.sceneLoaded -= SpawnPlayer;
-			SceneManager.sceneLoaded += SpawnPlayer;
+			MatchInfo.yourClientID = OwnerClientId;
+			MatchInfo.yourPlayer = this;
+			SetClientName_ServerRPC(NetworkManagerHud.username);
 		}
+		
+		MatchInfo.playerClients.Add(this);
+		
+		// teamLayer = 6 + MatchInfo.playerCount.Value % 2;
+		// if(IsOwner) 
+		// {
+		// 	MatchInfo.AddPlayer_ServerRPC();
+		// 	SceneManager.sceneLoaded -= SpawnPlayer;
+		// 	SceneManager.sceneLoaded += SpawnPlayer;
+		// }
 	}
 }

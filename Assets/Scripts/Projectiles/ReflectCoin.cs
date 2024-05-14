@@ -31,12 +31,17 @@ public class ReflectCoin : NetworkBehaviour
 	// Only runs server side
 	// -----------------------------------
 	
-	void FixedUpdate()
+	void Start()
 	{
-		if(!IsServer) return;
-		Quaternion deltaRotation = Quaternion.Euler(new Vector3(360,0,0) * Time.fixedDeltaTime);
-		rb.MoveRotation(rb.rotation * deltaRotation);
+		if(IsServer) rb.angularVelocity = new Vector3(360,0,0);
 	}
+	
+	// void FixedUpdate()
+	// {
+	// 	if(!IsServer) return;
+	// 	Quaternion deltaRotation = Quaternion.Euler(new Vector3(360,0,0) * Time.fixedDeltaTime);
+	// 	rb.MoveRotation(rb.rotation * deltaRotation);
+	// }
 	
 	public void ReflectShot(PlayerController shooter, float damage, float rpm, float force)
 	{
@@ -52,12 +57,12 @@ public class ReflectCoin : NetworkBehaviour
 	{
 		PlayerController closestReachableEnemy = null;
 		float closestDistance = Mathf.Infinity;
-		foreach(GameObject p in MatchInfo.players)
+		foreach(GameObject p in MatchInfo.playersCharacters)
 		{
 			if(p == null) continue;
 			PlayerController otherPlayer = p.GetComponent<PlayerController>();
 			if(otherPlayer == null || otherPlayer == shooter) continue;
-			if(otherPlayer.team.Value == shooter.team.Value) continue;
+			if(otherPlayer.team == shooter.team) continue;
 			
 			Vector3 dir = otherPlayer.transform.GetChild(0).position - transform.position;
 			

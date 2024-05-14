@@ -8,6 +8,7 @@ public class ThrowProjectile : Ability
 	public GameObject projectilePrefab;
 	public float throwForce = 5f;
 	public float throwVerticalForce = 1f;
+	private GameObject previous;
 	
 	public override bool CanCast(PlayerController caster, PlayerController target, Transform origin, Vector3 direction)
 	{
@@ -16,19 +17,28 @@ public class ThrowProjectile : Ability
 
 	protected override void Cast(PlayerController caster, PlayerController target, Transform origin, Vector3 direction)
 	{
-		Cast_ServerRPC(caster, origin.position, direction, caster.OwnerClientId);
+		Throw_ServerRPC(caster.rb.velocity, caster.transform.rotation, origin.position, direction, caster.OwnerClientId);
 	}
-	
+
 	// -----------------------------------
 	// Only runs server side
 	// -----------------------------------
 	[ServerRpc]
-	protected void Cast_ServerRPC(PlayerController shooter, Vector3 shotOrigin, Vector3 direction, ulong ownerId)
+	protected void Throw_ServerRPC(Vector3 initialVelocity, Quaternion shotRotataion, Vector3 shotOrigin, Vector3 direction, ulong ownerId)
 	{	
-		Rigidbody projectile = GameObject.Instantiate(projectilePrefab, shotOrigin, shooter.transform.rotation).GetComponent<Rigidbody>();
+		Rigidbody projectile = GameObject.Instantiate(projectilePrefab, shotOrigin, shotRotataion).GetComponent<Rigidbody>();
+		
+		if(previous != null) Destroy(previous);
+		previous = projectile.gameObject;
+		
 		projectile.GetComponent<NetworkObject>().SpawnWithOwnership(ownerId);
 		projectile.isKinematic = false;
-		projectile.velocity = shooter.rb.velocity;
+		projectile.velocity = initialVelocity;
 		projectile.AddForce(throwForce*direction + Vector3.up * throwVerticalForce, ForceMode.Impulse);
+	}
+	
+	public override void OnDestroy()
+	{
+		if(IsServer && previous != null) Destroy(previous);
 	}
 }

@@ -3,13 +3,26 @@ using System.Collections.Generic;
 using UnityEngine;
 using Unity.Netcode;
 using UnityEngine.Rendering;
+using UnityEngine.UIElements;
+using System.Text.RegularExpressions;
 
 public class PlayerController : NetworkBehaviour
 {
 	// Network variables
 	public NetworkVariable<Vector3> facingDirection = new NetworkVariable<Vector3>(Vector3.one, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
 	public NetworkVariable<float> health = new NetworkVariable<float>(200, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
-	public NetworkVariable<int> team = new NetworkVariable<int>(0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+	private Player _player;
+	public Player player
+	{
+		get { return _player; }
+		set
+		{
+			_player = value;
+			_player.team.OnValueChanged += SetTeam;
+			SetTeam(_player.team.Value, _player.team.Value);
+		}
+	}
+	public Player.Team team => player.team.Value;
 	
 	// Other references
 	
@@ -28,23 +41,42 @@ public class PlayerController : NetworkBehaviour
 	private bool canJump = true;
 	private Coroutine respawnCoroutine;
 
-	void Awake()
+	public override void OnDestroy()
 	{
+		player.team.OnValueChanged -= SetTeam;
+		MatchInfo.playersCharacters.Remove(gameObject);
+	}
+	
+	public override void OnNetworkSpawn()
+	{
+		MatchInfo.playersCharacters.Add(gameObject);
+		foreach(Player client in MatchInfo.playerClients) 
+		{
+			if (client.OwnerClientId == OwnerClientId)
+			{
+				player = client;
+				break;
+			}
+		}
+	}
+	
+	void Awake()
+	{	
 		rb = GetComponent<Rigidbody>();
 		if(!IsOwner) rb.isKinematic = true;
 		lookTransform = transform.GetChild(0).GetChild(0).GetChild(0);
 		equippedGun = GetComponentInChildren<Gun>();
-		team.OnValueChanged += SetTeam;
+		
 	}
 	
-	void SetTeam(int previousTeam, int newTeam)
+	void SetTeam(Player.Team previousTeam, Player.Team newTeam)
 	{
 		spawnPoint = GameObject.FindGameObjectWithTag("Team " + newTeam + " Spawn").transform;
 		transform.GetChild(0).GetComponent<MeshRenderer>().material = Resources.Load<Material>("Team " + newTeam);
 		var children = transform.GetComponentsInChildren<Transform>(includeInactive: true);
 		foreach (var child in children)
 		{
-			if(child.gameObject.layer != 5) child.gameObject.layer = newTeam + 5;
+			if(child.gameObject.layer != 5) child.gameObject.layer = (int)newTeam + 5;
 		}
 	}
 

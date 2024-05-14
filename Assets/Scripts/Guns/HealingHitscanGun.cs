@@ -25,7 +25,7 @@ public class HealingHitscanGun : HitscanGun
 			PlayerBody bodyHit = hit.collider.GetComponent<PlayerBody>();
 			if(bodyHit != null)
 			{
-				if(bodyHit.player.team.Value == shooter.team.Value)
+				if(bodyHit.player.team == shooter.team)
 					bodyHit.player.Damage(direction, -healing, 2f);
 				else
 					bodyHit.player.Damage(direction, damage, 2f);

@@ -1,9 +1,12 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.UI;
 
-public abstract class Ability : MonoBehaviour
+public abstract class Ability : NetworkBehaviour
 {
+	public Image ui;
 	public float cooldown;
 	[HideInInspector] public bool onCooldown = false;
 	protected abstract void Cast(PlayerController caster, PlayerController target, Transform origin, Vector3 direction);
@@ -19,7 +22,13 @@ public abstract class Ability : MonoBehaviour
 	protected IEnumerator Cooldown()
 	{
 		onCooldown = true;
-		yield return new WaitForSeconds(cooldown);
+		float timer = 0;
+		while(timer < cooldown)
+		{
+			ui.fillAmount = Mathf.Lerp(0,1, timer/cooldown);
+			yield return null;
+			timer+= Time.deltaTime;
+		}
 		onCooldown = false;
 	}
 }
