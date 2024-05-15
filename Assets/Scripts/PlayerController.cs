@@ -237,7 +237,7 @@ public class PlayerController : NetworkBehaviour
 	private void Die_ClientRPC()
 	{
 		rb.freezeRotation = false;
-		rb.drag = 1;
+		rb.angularVelocity = Vector3.forward;
 		canMove = false;
 	}
 	

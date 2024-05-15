@@ -2729,10 +2729,10 @@ MonoBehaviour:
   health:
     m_InternalValue: 200
   maxHealth: 200
-  maxMovementSpeed: 10
-  movementForce: 3000
+  maxMovementSpeed: 8
+  movementForce: 2500
   groundDrag: 7
-  airSpeedMult: 0.2
+  airSpeedMult: 0.1
   jumpForce: 15
   lookSensitivity: 1
   spawnPoint: {fileID: 0}

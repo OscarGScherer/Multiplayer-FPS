@@ -26,6 +26,7 @@ public class Player : NetworkBehaviour
 		Transform spawn = GameObject.FindGameObjectWithTag("Team " + team.Value + " Spawn").transform;
 		currentCharacter = NetworkManager.Instantiate(characterPrefabs[characterIndex], spawn.position, spawn.rotation);
 		currentCharacter.GetComponent<NetworkObject>().SpawnWithOwnership(OwnerClientId);
+		currentCharacter.GetComponent<PlayerController>().Respawn_ClientRPC(spawn.position, spawn.rotation);
 	}
 	
 	[ClientRpc]

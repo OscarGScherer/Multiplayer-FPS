@@ -37,6 +37,7 @@ public class Lobby : NetworkBehaviour
 			if(player.team.Value != Player.Team.Spectator) player.SpawnPlayer_ServerRPC(0);
 		}
 		CloseLobby_ClientRPC();
+		CapturePoint.Reset();
 	}
 	
 	public void EndMatch(Player.Team winningTeam)

@@ -9,12 +9,12 @@ public class CapturePoint : NetworkBehaviour
 	public static NetworkVariable<float> scoreWhite = new NetworkVariable<float>(0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 	public static NetworkVariable<float> scoreBlack = new NetworkVariable<float>(0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 	
-	private List<PlayerController> whitePlayersOnTop = new List<PlayerController>();
-	private List<PlayerController> blackPlayersOnTop = new List<PlayerController>();
+	private static List<PlayerController> whitePlayersOnTop = new List<PlayerController>();
+	private static List<PlayerController> blackPlayersOnTop = new List<PlayerController>();
 	
 	public Lobby lobby; 
 	
-	public void Reset()
+	public static void Reset()
 	{
 		whitePlayersOnTop.Clear();
 		blackPlayersOnTop.Clear();
@@ -48,7 +48,7 @@ public class CapturePoint : NetworkBehaviour
 		PlayerBody playerBody = other.GetComponent<PlayerBody>();
 		if (playerBody == null) return;
 		
-		if(playerBody.player.team == Player.Team.White &&!whitePlayersOnTop.Contains(playerBody.player))
+		if(playerBody.player.team == Player.Team.White && whitePlayersOnTop.Contains(playerBody.player))
 			whitePlayersOnTop.Remove(playerBody.player);
 			
 		if(playerBody.player.team == Player.Team.Black && blackPlayersOnTop.Contains(playerBody.player))
@@ -65,12 +65,10 @@ public class CapturePoint : NetworkBehaviour
 		if(scoreWhite.Value >= 100) 
 		{
 			lobby.EndMatch(Player.Team.White);
-			Reset();
 		}
 		else if(scoreBlack.Value >= 100) 
 		{
 			lobby.EndMatch(Player.Team.Black);
-			Reset();
 		}
 	}
 }

@@ -33,7 +33,7 @@ public class ReflectCoin : NetworkBehaviour
 	
 	void Start()
 	{
-		if(IsServer) rb.angularVelocity = new Vector3(360,0,0);
+		if(IsServer) rb.angularVelocity = new Vector3(30,0,0);
 	}
 	
 	// void FixedUpdate()
@@ -46,7 +46,7 @@ public class ReflectCoin : NetworkBehaviour
 	public void ReflectShot(PlayerController shooter, float damage, float rpm, float force)
 	{
 		PlayerController closestEnemy = GetClosestVisibleEnemy(shooter);
-		if(closestEnemy != null)
+		if(closestEnemy != null && rb.velocity.magnitude > 0.1f)
 		{
 			ReflectFlash_ClientRPC(closestEnemy.transform.GetChild(0).position, rpm);
 			closestEnemy.Damage(closestEnemy.transform.position - transform.position, damage*2, force*2);
