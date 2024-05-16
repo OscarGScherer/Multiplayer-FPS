@@ -58,9 +58,9 @@ public class CapturePoint : NetworkBehaviour
 	void Update()
 	{
 		if(whitePlayersOnTop.Count == 0 && blackPlayersOnTop.Count > 0) 
-			scoreBlack.Value += Time.deltaTime * 30;
+			scoreBlack.Value += Time.deltaTime;
 		else if(blackPlayersOnTop.Count == 0 && whitePlayersOnTop.Count > 0) 
-			scoreWhite.Value += Time.deltaTime * 30;
+			scoreWhite.Value += Time.deltaTime;
 		
 		if(scoreWhite.Value >= 100) 
 		{

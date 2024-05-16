@@ -54,6 +54,7 @@ public class Lobby : NetworkBehaviour
 	public void CloseLobby_ClientRPC()
 	{
 		winningTeamText.text = "Match has already started";
+		Cursor.visible = false;
 		
 		if(MatchInfo.yourPlayer.team.Value != Player.Team.Spectator) lobbyCamera.enabled = false;
 		transform.GetChild(0).GetChild(0).gameObject.SetActive(false);
@@ -63,6 +64,7 @@ public class Lobby : NetworkBehaviour
 	{
 		winningTeamText.text = (winningTeam == Player.Team.White) ? "TEAM WHITE WON" : "TEAM BLACK WON";
 		winningTeamText.color = (winningTeam == Player.Team.White) ? Color.white : Color.black;
+		Cursor.visible = true;
 		
 		lobbyCamera.enabled = true;
 		transform.GetChild(0).GetChild(0).gameObject.SetActive(true);
