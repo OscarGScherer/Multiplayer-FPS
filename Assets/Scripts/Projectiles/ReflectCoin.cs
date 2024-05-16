@@ -27,29 +27,15 @@ public class ReflectCoin : NetworkBehaviour
 		lr.enabled = false;
 		yield return new WaitForSeconds(30/rpm);
 	}
-	// -----------------------------------
-	// Only runs server side
-	// -----------------------------------
-	
-	void Start()
-	{
-		if(IsServer) rb.angularVelocity = new Vector3(30,0,0);
-	}
-	
-	// void FixedUpdate()
-	// {
-	// 	if(!IsServer) return;
-	// 	Quaternion deltaRotation = Quaternion.Euler(new Vector3(360,0,0) * Time.fixedDeltaTime);
-	// 	rb.MoveRotation(rb.rotation * deltaRotation);
-	// }
 	
 	public void ReflectShot(PlayerController shooter, float damage, float rpm, float force)
 	{
 		PlayerController closestEnemy = GetClosestVisibleEnemy(shooter);
 		if(closestEnemy != null && rb.velocity.magnitude > 0.1f)
 		{
-			ReflectFlash_ClientRPC(closestEnemy.transform.GetChild(0).position, rpm);
-			closestEnemy.Damage(closestEnemy.transform.position - transform.position, damage*2, force*2);
+			
+			ReflectFlash_ServerRpc(closestEnemy.transform.GetChild(0).position, rpm);
+			closestEnemy.Damage_ServerRPC(closestEnemy.transform.position - transform.position, damage*2, force*2);
 		}
 	}
 	
@@ -81,6 +67,22 @@ public class ReflectCoin : NetworkBehaviour
 		}
 		return closestReachableEnemy;
 	}
+	
+	// -----------------------------------
+	// Only runs server side
+	// -----------------------------------
+	
+	void Start()
+	{
+		//if(IsServer) rb.angularVelocity = new Vector3(30,0,0);
+	}
+	
+	// void FixedUpdate()
+	// {
+	// 	if(!IsServer) return;
+	// 	Quaternion deltaRotation = Quaternion.Euler(new Vector3(360,0,0) * Time.fixedDeltaTime);
+	// 	rb.MoveRotation(rb.rotation * deltaRotation);
+	// }
 	// -----------------------------------
 	// RPCs the server calls
 	// -----------------------------------
@@ -89,4 +91,7 @@ public class ReflectCoin : NetworkBehaviour
 	{
 		StartCoroutine(ReflectFlashCoroutine(hitPos, rpm));
 	}
+	
+	[ServerRpc]
+	public void ReflectFlash_ServerRpc(Vector3 hitPos, float rpm) => ReflectFlash_ClientRPC(hitPos, rpm);
 }

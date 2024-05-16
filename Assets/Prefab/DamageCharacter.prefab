@@ -1811,8 +1811,9 @@ MonoBehaviour:
   onCooldown: 0
   projectilePrefab: {fileID: 8285483461494128308, guid: d42f5e085d49d3f4c86532eb7f3394db,
     type: 3}
-  throwForce: 1
-  throwVerticalForce: 1
+  throwForce: 3
+  throwVerticalForce: 1.5
+  angularVelocity: {x: 2, y: 0, z: 0}
 --- !u!1 &4829344111854796670
 GameObject:
   m_ObjectHideFlags: 0
@@ -1928,6 +1929,7 @@ MonoBehaviour:
   rpm: 200
   roundCapacity: 5
   damage: 70
+  knockback: 0
 --- !u!1 &5585584595049653693
 GameObject:
   m_ObjectHideFlags: 0

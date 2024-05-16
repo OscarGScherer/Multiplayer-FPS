@@ -10,10 +10,6 @@ public class HealingHitscanGun : HitscanGun
 	// Only runs client side
 	// -----------------------------------
 	
-	// -----------------------------------
-	// Only runs server side
-	// -----------------------------------
-	
 	public override void Fire(PlayerController shooter, Vector3 shotOrigin, Vector3 direction)
 	{
 		if(!isNextRoundReady) return;
@@ -26,15 +22,19 @@ public class HealingHitscanGun : HitscanGun
 			if(bodyHit != null)
 			{
 				if(bodyHit.player.team == shooter.team)
-					bodyHit.player.Damage(direction, -healing, 2f);
+					bodyHit.player.Damage_ServerRPC(direction, -healing, knockback);
 				else
-					bodyHit.player.Damage(direction, damage, 2f);
+					bodyHit.player.Damage_ServerRPC(direction, damage, knockback);
 			}
 		}
 		
 		StartCoroutine(CycleNextRoundCoroutine());
-		MuzzleFlash_ClientRPC(hitPos);
+		MuzzleFlash_ServerRpc(hitPos);
 	}
+	
+	// -----------------------------------
+	// Only runs server side
+	// -----------------------------------
 	
 	// -----------------------------------
 	// RPCs the server calls

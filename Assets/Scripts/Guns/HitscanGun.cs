@@ -5,7 +5,7 @@ using UnityEngine;
 
 public class HitscanGun : Gun
 {
-	public float damage;
+	public float damage, knockback = 0;
 	protected LineRenderer lr;
 	protected Coroutine muzzleFlashCoroutine;
 	
@@ -29,10 +29,6 @@ public class HitscanGun : Gun
 		yield return new WaitForSeconds(30/rpm);
 	}
 	
-	// -----------------------------------
-	// Only runs server side
-	// -----------------------------------
-	
 	public override void Fire(PlayerController shooter, Vector3 shotOrigin, Vector3 direction)
 	{
 		if(!isNextRoundReady) return;
@@ -42,19 +38,30 @@ public class HitscanGun : Gun
 		if(hit.collider != null)
 		{
 			PlayerBody bodyHit = hit.collider.GetComponent<PlayerBody>();
-			if(bodyHit != null) bodyHit.player.Damage(direction, damage, 2f);
+			if(bodyHit != null) bodyHit.player.Damage_ServerRPC(direction, damage, knockback);
 		}
 		
 		StartCoroutine(CycleNextRoundCoroutine());
-		MuzzleFlash_ClientRPC(hitPos);
+		MuzzleFlash_ServerRpc(hitPos);
 	}
+	
+	// -----------------------------------
+	// RPCs the client calls
+	// -----------------------------------
+	
+	[ServerRpc]
+	protected void MuzzleFlash_ServerRpc(Vector3 hitPos) => MuzzleFlash_ClientRpc(hitPos);
+	
+	// -----------------------------------
+	// Only runs server side
+	// -----------------------------------
 	
 	// -----------------------------------
 	// RPCs the server calls
 	// -----------------------------------
 	
 	[ClientRpc]
-	protected void MuzzleFlash_ClientRPC(Vector3 hitPos)
+	protected void MuzzleFlash_ClientRpc(Vector3 hitPos)
 	{
 		if(muzzleFlashCoroutine != null) StopCoroutine(muzzleFlashCoroutine);
 		muzzleFlashCoroutine = StartCoroutine(MuzzleFlashCoroutine(hitPos));

@@ -10,10 +10,6 @@ public class DPS1Gun : HitscanGun
 	// Only runs client side
 	// -----------------------------------
 	
-	// -----------------------------------
-	// Only runs server side
-	// -----------------------------------
-	
 	public override void Fire(PlayerController shooter, Vector3 shotOrigin, Vector3 direction)
 	{
 		if(!isNextRoundReady) return;
@@ -23,15 +19,22 @@ public class DPS1Gun : HitscanGun
 		if(hit.collider != null)
 		{
 			PlayerBody bodyHit = hit.collider.GetComponent<PlayerBody>();
-			if(bodyHit != null) bodyHit.player.Damage(direction, damage, 5f);
+			if(bodyHit != null) bodyHit.player.Damage_ServerRPC(direction, damage, knockback);
 			
 			ReflectCoin coin = hit.collider.GetComponent<ReflectCoin>();
-			if(coin != null && coin.OwnerClientId == OwnerClientId) coin.ReflectShot(shooter, damage, rpm, 5f);
+			if(coin != null && coin.OwnerClientId == OwnerClientId)
+			{
+				coin.ReflectShot(shooter, damage, rpm, knockback);
+			}
 		}
 		
 		StartCoroutine(CycleNextRoundCoroutine());
-		MuzzleFlash_ClientRPC(hitPos);
+		MuzzleFlash_ServerRpc(hitPos);
 	}
+	
+	// -----------------------------------
+	// Only runs server side
+	// -----------------------------------
 	
 	// -----------------------------------
 	// RPCs the server calls

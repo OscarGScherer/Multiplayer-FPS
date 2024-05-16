@@ -173,6 +173,7 @@ public class PlayerController : NetworkBehaviour
 	
 	public void Move(Vector2 direction)
 	{
+		direction = direction.normalized;
 		Vector3 force = (transform.forward * direction.y + transform.right * direction.x) * movementForce * Time.deltaTime;
 		
 		RaycastHit groundCheck;
@@ -188,10 +189,13 @@ public class PlayerController : NetworkBehaviour
 	// RPCs the client calls
 	// -----------------------------------
 	
-	[ServerRpc]
-	public void FireGun_ServerRPC() { equippedGun.Fire(this, lookTransform.position, facingDirection.Value); }
-	[ServerRpc]
+	public void FireGun() { equippedGun.Fire(this, lookTransform.position, facingDirection.Value); }
+	
+	[ServerRpc(RequireOwnership = false)]
 	public void AddForce_ServerRPC(Vector3 force, float magnitude) => AddForce_ClientRPC(force, magnitude);
+	
+	[ServerRpc(RequireOwnership = false)]
+	public void Damage_ServerRPC(Vector3 direction, float damage, float force) => Damage(direction, damage, force);
 	
 	// -----------------------------------
 	// Only runs server side

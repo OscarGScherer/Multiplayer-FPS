@@ -8,6 +8,7 @@ public class ThrowProjectile : Ability
 	public GameObject projectilePrefab;
 	public float throwForce = 5f;
 	public float throwVerticalForce = 1f;
+	public Vector3 angularVelocity;
 	private GameObject previous;
 	
 	public override bool CanCast(PlayerController caster, PlayerController target, Transform origin, Vector3 direction)
@@ -32,9 +33,8 @@ public class ThrowProjectile : Ability
 		previous = projectile.gameObject;
 		
 		projectile.GetComponent<NetworkObject>().SpawnWithOwnership(ownerId);
-		projectile.isKinematic = false;
-		projectile.velocity = initialVelocity;
-		projectile.AddForce(throwForce*direction + Vector3.up * throwVerticalForce, ForceMode.Impulse);
+		projectile.GetComponent<Throwable>().SetPos_ClientRpc(shotOrigin);
+		projectile.GetComponent<Throwable>().AddForce_ClientRPC(throwForce*direction + Vector3.up * throwVerticalForce, initialVelocity, angularVelocity);
 	}
 	
 	public override void OnDestroy()

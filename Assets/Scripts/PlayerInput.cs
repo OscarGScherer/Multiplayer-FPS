@@ -147,7 +147,7 @@ public class PlayerInput : NetworkBehaviour
 			if(clientInput.spacebar) playerController.Jump(7f);
 			
 			//Shooting, calling RPCs
-			if(clientInput.leftClick) playerController.FireGun_ServerRPC();
+			if(clientInput.leftClick) playerController.FireGun();
 		}
 		//SetHorizontalVelocity_ServerRPC(clientInput.wasdVector);
 		//LookAt_ServerRPC(clientInput.mouseVector);
